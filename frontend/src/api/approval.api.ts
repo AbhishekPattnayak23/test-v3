@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import apiClient from './client';
 import { 
   PendingApprovalResponse, 
   ApprovalDecisionResponse,
@@ -91,3 +91,5 @@ export const approvalApi = {
     return response.data;
   }
 };
+
+export default approvalApi;
