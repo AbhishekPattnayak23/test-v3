@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuthStore } from '../../store/auth.store';
 import { LogOut, User } from 'lucide-react';
-import { apiClient } from '../../api/client';
+import apiClient from '../../api/client';
 
 interface HeaderProps {
   title?: string;
