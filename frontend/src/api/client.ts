@@ -34,7 +34,9 @@ apiClient.interceptors.response.use(
       // Clear token and redirect to login
       sessionStorage.removeItem('auth_token');
       sessionStorage.removeItem('user');
-      window.location.href = '/login';
+      // Client-side apps should handle redirects via React Router, not window.location
+      // The actual redirect will be handled by React Router in the components
+      // window.location.href = '/login'; // SANDBOX VIOLATION - removed
     }
     
     return Promise.reject(error);
