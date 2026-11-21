@@ -1,0 +1,165 @@
+// This is your Prisma schema file
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  username       String    @unique
+  hashedPassword String
+  fullName       String?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  roles      UserRole[]
+  assignments Assignment[]
+  auditLogs  AuditLog[]  @relation("userAuditLogs")
+}
+
+model Role {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  users UserRole[]
+}
+
+model UserRole {
+  id        String   @id @default(cuid())
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  role Role @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+}
+
+model WorkflowTemplate {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  description String?
+  version     Int              @default(1)
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  stages   WorkflowStage[]
+  requests Request[]
+}
+
+model WorkflowStage {
+  id                  String            @id @default(cuid())
+  workflowTemplateId  String
+  name                String
+  description         String?
+  sequence            Int
+  requiresApproval    Boolean           @default(false)
+  approvalThreshold   Int?              @default(1)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  workflowTemplate WorkflowTemplate @relation(fields: [workflowTemplateId], references: [id])
+  assignments      Assignment[]
+}
+
+model Request {
+  id                  String            @id @default(cuid())
+  workflowTemplateId  String
+  requesterId         String
+  status              RequestStatus     @default(PENDING)
+  payload             Json
+  metadata            Json?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  workflowTemplate WorkflowTemplate @relation(fields: [workflowTemplateId], references: [id])
+  requester        User             @relation(fields: [requesterId], references: [id])
+  assignments      Assignment[]
+}
+
+model Assignment {
+  id                String           @id @default(cuid())
+  requestId         String
+  workflowStageId   String
+  assigneeId        String
+  status            AssignmentStatus @default(PENDING)
+  dueDate           DateTime?
+  completedAt       DateTime?
+  completionNotes   String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  request        Request        @relation(fields: [requestId], references: [id])
+  workflowStage  WorkflowStage  @relation(fields: [workflowStageId], references: [id])
+  assignee       User           @relation(fields: [assigneeId], references: [id])
+  approvalRecord ApprovalRecord? @relation("assignmentApproval")
+}
+
+model ApprovalRecord {
+  id           String           @id @default(cuid())
+  assignmentId String           @unique
+  status       ApprovalStatus   @default(PENDING)
+  approverId   String?
+  decision     ApprovalDecision?
+  decisionAt   DateTime?
+  notes        String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  assignment Assignment @relation("assignmentApproval", fields: [assignmentId], references: [id])
+  approver   User?      @relation(fields: [approverId], references: [id])
+}
+
+model AuditLog {
+  id          String        @id @default(cuid())
+  userId      String?
+  action      String
+  entityType  String
+  entityId    String?
+  changes     Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime      @default(now())
+
+  user User? @relation("userAuditLogs", fields: [userId], references: [id])
+}
+
+enum RequestStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  REJECTED
+}
+
+enum AssignmentStatus {
+  PENDING
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ApprovalDecision {
+  APPROVE
+  REJECT
+}
