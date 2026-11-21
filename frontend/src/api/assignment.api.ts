@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import apiClient from './client';
 import type { Assignment, AssignmentCompletionRequest } from '../types/api.types';
 
 /**
