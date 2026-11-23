@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: solmar_db
+    environment:
+      POSTGRES_DB: solmar_db
+      POSTGRES_USER: solmar_user
+      POSTGRES_PASSWORD: solmar_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U solmar_user -d solmar_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - solmar_network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: solmar_backend
+    environment:
+      DATABASE_URL: postgresql://solmar_user:solmar_password@postgres:5432/solmar_db
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./prisma:/app/prisma
+      - ./package.json:/app/package.json
+      - ./package-lock.json:/app/package-lock.json
+    entrypoint: ["sh", "-c", "npm install && npx prisma migrate deploy && npm run dev"]
+    networks:
+      - solmar_network
+
+networks:
+  solmar_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
