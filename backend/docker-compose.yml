@@ -43,6 +43,27 @@ services:
     networks:
       - solmar_network
 
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: solmar_frontend
+    environment:
+      VITE_API_BASE_URL: http://backend:3000
+      NODE_ENV: development
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - solmar_network
+
 networks:
   solmar_network:
     driver: bridge

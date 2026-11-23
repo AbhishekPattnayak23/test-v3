@@ -1,0 +1,52 @@
+// Placeholder schema for Wave 1 - Full schema will be implemented in Wave 2 (TASK-02)
+// This minimal schema allows Wave 1 compilation while respecting wave boundaries
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  password_hash  String
+  role           String   // Placeholder - will be enum in Wave 2
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+}
+
+model Assignment {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  status      String   // Placeholder - will be enum in Wave 2
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+}
+
+model ApprovalRequest {
+  id            String   @id @default(uuid())
+  status        String   // Placeholder - will be enum in Wave 2
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  entity_type String
+  entity_id   String
+  action      String
+  user_id     String?
+  changes     String?
+  created_at  DateTime @default(now())
+}
+
+model SystemConfig {
+  id    String @id @default(uuid())
+  key   String @unique
+  value String
+}
