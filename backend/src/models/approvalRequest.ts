@@ -18,6 +18,7 @@ export interface CreateApprovalRequestData {
   assignmentId: string;
   requesterId: string;
   approverId: string;
+  status?: 'PENDING' | 'APPROVED' | 'REJECTED';
   decisionNotes?: string;
 }
 
@@ -30,17 +31,17 @@ export interface ApprovalRequestWithRelations extends ApprovalRequest {
   assignment: {
     id: string;
     title: string;
-    description: string;
+    description?: string;
   };
   requester: {
     id: string;
     email: string;
-    name?: string;
+    username: string;
   };
   approver: {
     id: string;
     email: string;
-    name?: string;
+    username: string;
   };
 }
 
@@ -61,4 +62,21 @@ export function isValidStatusTransition(
   };
 
   return validTransitions[currentStatus].includes(newStatus);
+}
+
+/**
+ * Gets the next allowed statuses for an approval request
+ * @param currentStatus Current approval request status
+ * @returns Array of allowed next statuses
+ */
+export function getAllowedNextStatuses(
+  currentStatus: ApprovalRequest['status']
+): ApprovalRequest['status'][] {
+  const validTransitions: Record<ApprovalRequest['status'], ApprovalRequest['status'][]> = {
+    PENDING: ['APPROVED', 'REJECTED'],
+    APPROVED: [],
+    REJECTED: [],
+  };
+
+  return validTransitions[currentStatus];
 }
